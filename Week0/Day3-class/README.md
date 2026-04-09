@@ -1,4 +1,4 @@
-# Day 4 – SQL Window Functions & Conditional Logic
+# Day 3 – SQL Window Functions & Conditional Logic
 
 ## Objective
 The objective of this session is to understand advanced SQL concepts such as Window Functions and Conditional Logic using CASE WHEN. These concepts are essential for performing analytical queries, ranking data, and deriving meaningful insights from datasets without modifying the original data structure.
