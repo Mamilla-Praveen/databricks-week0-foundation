@@ -1,0 +1,115 @@
+When we use Parquet files, what are we actually using?
+We are just using a storage format. It stores data efficiently, it is fast to read, but it is not intelligent. It does not understand business logic like updates, deletes, or transactions.
+
+Now imagine a real-world scenario. Suppose you have a dataset stored in Parquet:
+
+id	salary
+1	5000
+
+Now your manager tells you:
+“Update salary of id = 1 to 6000.”
+
+In a database, this is very simple — just run an update query.
+But in Parquet, you cannot directly update a record. What you have to do is:
+
+Read the entire file
+Modify the value
+Rewrite the entire dataset
+
+So even if you want to change one row, you end up rewriting everything. This is inefficient and risky.
+
+Now let’s move to a more serious problem.
+
+Imagine a bank transaction. You are transferring ₹1000 from Account A to Account B.
+
+Two steps happen:
+
+Deduct ₹1000 from A
+Add ₹1000 to B
+
+Now imagine the system crashes after step 1.
+
+What happens?
+
+Money is deducted from A
+But not added to B
+
+So the money is lost. This is a data inconsistency problem, and this is exactly what can happen in Parquet-based pipelines because there is no transaction guarantee.
+
+This is where we introduce a very important concept called ACID.
+
+ACID means:
+
+Atomicity → Either everything happens or nothing happens
+Consistency → Data should always remain correct
+Isolation → Multiple operations should not interfere with each other
+Durability → Once data is saved, it should never be lost
+
+Parquet does not guarantee any of these. That means:
+
+Partial writes can happen
+Data can become corrupted
+You cannot safely update or delete data
+You cannot recover old versions
+
+Now let’s introduce the solution — Delta Lake.
+
+Delta Lake is not a completely new format. It is actually:
+
+Parquet + a transaction layer on top of it
+
+What does this transaction layer do?
+
+It maintains a special folder called:
+
+_delta_log
+
+This folder keeps track of:
+
+All changes made to the data
+Every version of the dataset
+Metadata about operations
+
+Because of this, Delta Lake becomes intelligent.
+
+Now let’s revisit the same problems and see how Delta solves them.
+
+First, updates.
+In Delta, you can directly update a record without rewriting the entire dataset.
+
+Second, deletes.
+You can delete specific records easily.
+
+Third, transactions.
+If a job fails in the middle, Delta ensures that either:
+
+All data is written successfully
+OR
+Nothing is written at all
+
+So no partial data, no corruption.
+
+Fourth, versioning.
+Every change is stored as a new version. That means if something goes wrong, you can go back to the previous version. This is called time travel.
+
+Let me give you a simple analogy.
+
+Using Parquet is like editing a file in Notepad.
+If your system crashes, your file may get corrupted and you lose data.
+
+Using Delta Lake is like using Google Docs.
+
+It auto-saves
+It keeps history
+You can restore older versions
+
+So Delta Lake adds reliability, safety, and flexibility on top of Parquet.
+
+Delta vs Parquet 
+Feature		Parquet		Delta
+Insert		Y		Y
+Update		N		Y
+Delete		N		Y
+Merge		N		Y
+Time Travel	N		Y
+ACID		N		Y
